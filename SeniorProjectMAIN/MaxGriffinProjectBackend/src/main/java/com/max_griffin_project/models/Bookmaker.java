@@ -13,11 +13,11 @@ import java.util.ArrayList;
 @Table(name = "bookmaker")
 public class Bookmaker {
     @Id
-    private String bookmakerId; 
+    private String id;
 
     @Column(nullable = false, unique = true)
     private String name;
 
     @OneToMany(mappedBy = "bookmaker", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<LiveLine> liveLines = new ArrayList<>();
+    private List<Sequence> sequences = new ArrayList<>();
 }

@@ -20,27 +20,27 @@ import java.util.ArrayList;
 @Table(name = "event")
 public class Event {
     @Id
-    private String eventId;
+    @GeneratedValue
+    @UuidGenerator(style = UuidGenerator.Style.RANDOM)
+    private UUID id;
 
-    @Column(nullable = false)
-    private String sport;
+    @ManyToOne
+    @JoinColumn(name = "venue_id", nullable = false)
+    private Venue venue;
 
-    @Column(nullable = false)
-    private String homeTeam;
-
-    @Column(nullable = false)
-    private String awayTeam;
-
-    @Column(nullable = false)
-    private Instant startTime;
+    @Column(name = "name", nullable = false)
+    private String name;
 
     @Column(nullable = true)
-    private String eventStatus;
+    private Instant start_date;
+
+    @Column(nullable = true)
+    private Instant end_date;
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<LiveLine> liveLines = new ArrayList<>();
+    private List<Sequence> sequences = new ArrayList<>();
 
-    public EventDto toEventDto(){
-        return new EventDto(this.eventId, this.sport, this.homeTeam, this.awayTeam, this.startTime, this.eventStatus);
-    }
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Match> matches = new ArrayList<>();
+
 }

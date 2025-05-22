@@ -7,6 +7,10 @@ plugins {
 group = 'com.max-griffin-project'
 version = '0.0.1-SNAPSHOT'
 
+springBoot {
+    mainClass = 'com.max_griffin_project.MaxGriffinProjectApplication'
+}
+
 java {
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(17)
