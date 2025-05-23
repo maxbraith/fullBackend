@@ -89,27 +89,28 @@ public class LiveLineService {
         return shopMap;
     }
 
-    public Map<String, List<LineMetricsDto>> lineShopperWithMetrics(List<MatchDto> upcomingEvents) {
-        Map<String, List<LineMetricsDto>> metricsMap = new HashMap<>();
+    public Map<UUID, List<LineMetricsDto>> lineShopperWithMetrics(List<MatchDto> upcomingMatches) {
+        Map<UUID, List<LineMetricsDto>> metricsMap = new HashMap<>();
 
-        for (MatchDto event : upcomingEvents) {
-            if (event == null || event.eventId() == null) {
+        for (MatchDto match : upcomingMatches) {
+            if (match == null || match.id() == null) {
                 System.err.println("Error null");
                 continue;
             }
 
-            List<LiveLine> liveLinesHome = livelineRepository.findByEvent_EventIdAndTeam(event.eventId(),
-                    event.homeTeam());
-            List<LiveLine> liveLinesAway = livelineRepository.findByEvent_EventIdAndTeam(event.eventId(),
-                    event.awayTeam());
+            /*get live sequences from this match, home and away */
+            List<Sequence> liveLinesHome = sequenceRepository.findByMatch_IdAndSide_IdAndLiveFlagTrue(match.id(),
+                    match.side_a_id());
+            List<Sequence> liveLinesAway = sequenceRepository.findByMatch_IdAndSide_IdAndLiveFlagTrue(match.id(),
+                    match.side_b_id());
 
             if (liveLinesHome.isEmpty()) {
-                System.err.println("Error: No home live lines found for eventId " + event.eventId());
+                System.err.println("Error: No home live lines found for eventId " + match.id());
                 continue;
             }
 
             if (liveLinesAway.isEmpty()) {
-                System.err.println("Error: No away live lines found for eventID: " + event.eventId());
+                System.err.println("Error: No away live lines found for eventID: " + match.id());
                 continue;
             }
 
@@ -117,14 +118,19 @@ public class LiveLineService {
             LiveLineDto shopAwayDto = null;
 
             for (Sequence liveLine : liveLinesHome) {
-                LiveLineDto liveLineDto = snapshotRepository.findTopBySequence_IdOrderByTimestampDesc(liveLine.getId())
-                        .toLiveLineDto();
+                /*find most recent snapshot from the home line */
+                Optional<Snapshot> latestSnap = snapshotRepository
+                        .findTopBySequence_IdOrderByTimestampDesc(liveLine.getId());
+                LiveLineDto liveLineDto = latestSnap.map(Snapshot::toLiveLineDto).orElse(null);
+                /*lineshop what is available */
                 if (shopHomeDto == null || isBetterOdds(liveLineDto.price(), shopHomeDto.price())) {
                     shopHomeDto = liveLineDto;
                 }
             }
-            for (LiveLine liveLine : liveLinesAway) {
-                LiveLineDto liveLineDto = liveLine.toLiveLineDto();
+            for (Sequence liveLine : liveLinesAway) {
+                Optional<Snapshot> latestSnap = snapshotRepository
+                        .findTopBySequence_IdOrderByTimestampDesc(liveLine.getId());
+                LiveLineDto liveLineDto = latestSnap.map(Snapshot::toLiveLineDto).orElse(null);
                 if (shopHomeDto == null || isBetterOdds(liveLineDto.price(), shopAwayDto.price())) {
                     shopAwayDto = liveLineDto;
                 }
@@ -141,13 +147,23 @@ public class LiveLineService {
             Double homeShoppedEV = calculateEV(trueProbHomeShopped, trueProbAwayShopped, shopHomeDto.price());
             Double awayShoppedEV = calculateEV(trueProbAwayShopped, trueProbHomeShopped, shopAwayDto.price());
 
-            LiveLine bookmakerAwayShoppedHome = livelineRepository.findByEvent_EventIdAndBookmaker_BookmakerIdAndTeam(
-                    event.eventId(), shopHomeDto.bookmakerId(), shopAwayDto.team());
-            LiveLine bookmakerHomeShoppedAway = livelineRepository.findByEvent_EventIdAndBookmaker_BookmakerIdAndTeam(
-                    event.eventId(), shopAwayDto.bookmakerId(), shopHomeDto.team());
 
-            LiveLineDto bookmakerAwayShoppedHomeDto = bookmakerAwayShoppedHome.toLiveLineDto();
-            LiveLineDto bookmakerHomeShoppedAwayDto = bookmakerHomeShoppedAway.toLiveLineDto();
+            /* find the opposing sequence by bookmaker - find away line to compare to home line */
+            Sequence bookmakerAwayShoppedHome = sequenceRepository.
+                    findByMatch_IdAndBookmaker_IdAndMarket_IdAndSide_Id(shopHomeDto.match_id(), shopHomeDto.bookmaker_id(),
+                            shopHomeDto.market_id(), shopAwayDto.side_id());
+
+            Sequence bookmakerHomeShoppedAway = sequenceRepository.
+                    findByMatch_IdAndBookmaker_IdAndMarket_IdAndSide_Id(shopAwayDto.match_id(), shopAwayDto.bookmaker_id(),
+                            shopAwayDto.market_id(), shopHomeDto.side_id());
+
+            /*find true vig of the shopped home line */
+            Optional<Snapshot> latestSnapBookmakerAway = snapshotRepository.findTopBySequence_IdOrderByTimestampDesc(bookmakerAwayShoppedHome.getId());
+            LiveLineDto bookmakerAwayShoppedHomeDto = latestSnapBookmakerAway.map(Snapshot::toLiveLineDto).orElse(null);
+
+            /*find true vig of the shopped away line */
+            Optional<Snapshot> latestSnapBookmakerHome = snapshotRepository.findTopBySequence_IdOrderByTimestampDesc(bookmakerHomeShoppedAway.getId());
+            LiveLineDto bookmakerHomeShoppedAwayDto = latestSnapBookmakerHome.map(Snapshot::toLiveLineDto).orElse(null);
 
             Double breakEvenBookmakerAway = calculateImpliedProbability(bookmakerAwayShoppedHomeDto.price());
             Double breakEvenBookmakerHome = calculateImpliedProbability(bookmakerHomeShoppedAwayDto.price());
@@ -163,12 +179,12 @@ public class LiveLineService {
             double awayTrueEv = calculateEV(trueProbAwayShopped, trueProbBookmakerAwayOpp, shopAwayDto.price());
 
             LineMetricsDto metricsHomeDto = new LineMetricsDto(
-                    shopHomeDto.liveLineId(),
-                    shopHomeDto.eventId(),
-                    shopHomeDto.marketId(),
-                    shopHomeDto.bookmakerId(),
-                    shopHomeDto.sport(),
-                    shopHomeDto.team(),
+                    shopHomeDto.snapshot_id(),
+                    shopHomeDto.event_name(),
+                    shopHomeDto.market_id(),
+                    shopHomeDto.bookmaker_id(),
+                    shopHomeDto.sport_id(),
+                    shopHomeDto.side_name(),
                     shopHomeDto.price(),
                     shopHomeDto.timestamp(),
                     breakEvenHome,
@@ -180,12 +196,12 @@ public class LiveLineService {
                     homeTrueEV);
 
             LineMetricsDto metricsAwayDto = new LineMetricsDto(
-                    shopAwayDto.liveLineId(),
-                    shopAwayDto.eventId(),
-                    shopAwayDto.marketId(),
-                    shopAwayDto.bookmakerId(),
-                    shopAwayDto.sport(),
-                    shopAwayDto.team(),
+                    shopAwayDto.snapshot_id(),
+                    shopAwayDto.event_name(),
+                    shopAwayDto.market_id(),
+                    shopAwayDto.bookmaker_id(),
+                    shopAwayDto.sport_id(),
+                    shopAwayDto.side_name(),
                     shopAwayDto.price(),
                     shopAwayDto.timestamp(),
                     breakEvenAway,
@@ -199,87 +215,84 @@ public class LiveLineService {
             optimalLines.add(metricsHomeDto);
             optimalLines.add(metricsAwayDto);
 
-            metricsMap.put(event.eventId(), optimalLines);
+            metricsMap.put(match.id(), optimalLines);
         }
 
         return metricsMap;
     }
 
-    public Map<String, Map<String, List<LiveLineDto>>> getAllLines(List<MatchDto> upcomingEvents) {
-        Map<String, Map<String, List<LiveLineDto>>> lineMap = new HashMap<>();
 
-        for (MatchDto event : upcomingEvents) {
-            if (event == null || event.eventId() == null) {
+    /* find all sequences associated with each match given sport */
+    public Map<UUID, Map<String, List<LiveLineDto>>> getAllLines(List<MatchDto> upcomingMatches) {
+        Map<UUID, Map<String, List<LiveLineDto>>> lineMap = new HashMap<>();
+
+        for (MatchDto match : upcomingMatches) {
+            if (match == null || match.id() == null) {
                 System.err.println("Error null");
                 continue;
             }
 
-            List<LiveLine> liveLines = livelineRepository.findByEvent_EventId(event.eventId());
+            List<Sequence> liveLines = sequenceRepository.findByMatch_IdAndLiveFlagTrue(match.id());
             Map<String, List<LiveLineDto>> bookMap = new HashMap<>();
 
-            for (LiveLine liveLine : liveLines) {
-                List<LiveLineDto> bothLines = new ArrayList<>();
-                LiveLineDto liveLineDto = liveLine.toLiveLineDto();
-                LiveLine homeLine = livelineRepository.findByEvent_EventIdAndBookmaker_BookmakerIdAndTeam(
-                        event.eventId(), liveLineDto.bookmakerId(), event.homeTeam());
-                LiveLine awayLine = livelineRepository.findByEvent_EventIdAndBookmaker_BookmakerIdAndTeam(
-                        event.eventId(), liveLineDto.bookmakerId(), event.awayTeam());
-                LiveLineDto homeLineDto = homeLine.toLiveLineDto();
-                LiveLineDto awayLineDto = awayLine.toLiveLineDto();
-                bothLines.add(homeLineDto);
-                bothLines.add(awayLineDto);
-                if (!bookMap.containsKey(liveLineDto.bookmakerId())) {
-                    bookMap.put(liveLineDto.bookmakerId(), bothLines);
-                }
+            for (Sequence liveLine : liveLines) {
+                Optional<Snapshot> latestSnap = snapshotRepository
+                        .findTopBySequence_IdOrderByTimestampDesc(liveLine.getId());
+                LiveLineDto liveLineDto = latestSnap.map(Snapshot::toLiveLineDto).orElse(null);
+                bookMap.computeIfAbsent(liveLineDto.bookmaker_id(), k -> new ArrayList<>()).add(liveLineDto);
             }
-            lineMap.put(event.eventId(), bookMap);
+            lineMap.put(match.id(), bookMap);
         }
 
         return lineMap;
 
     }
 
-    public Map<String, ArbInfoDto> arbLiveLines(List<MatchDto> upcomingEvents) {
-        Map<String, ArbInfoDto> arbMap = new HashMap<>();
 
-        for (MatchDto event : upcomingEvents) {
-            if (event == null || event.eventId() == null) {
+    /* look for arbs */
+    public Map<UUID, ArbInfoDto> arbLiveLines(List<MatchDto> upcomingMatches) {
+        Map<UUID, ArbInfoDto> arbMap = new HashMap<>();
+
+        for (MatchDto match : upcomingMatches) {
+            if (match == null || match.id() == null) {
                 System.err.println("Error null");
                 continue;
             }
 
-            List<LiveLine> liveLinesHome = livelineRepository.findByEvent_EventIdAndTeam(event.eventId(),
-                    event.homeTeam());
-            List<LiveLine> liveLinesAway = livelineRepository.findByEvent_EventIdAndTeam(event.eventId(),
-                    event.awayTeam());
+            List<Sequence> liveLinesHome = sequenceRepository.findByMatch_IdAndSide_IdAndLiveFlagTrue(match.id(), match.side_a_id());
+            List<Sequence> liveLinesAway = sequenceRepository.findByMatch_IdAndSide_IdAndLiveFlagTrue(match.id(), match.side_b_id());
 
             Double homeBreakEven;
             Double awayBreakEven;
             Double vig;
 
-            for (LiveLine liveLineHome : liveLinesHome) {
-                LiveLineDto liveLineHomeDto = liveLineHome.toLiveLineDto();
+            for (Sequence liveLineHome : liveLinesHome) {
+                Optional<Snapshot> latestSnapHome = snapshotRepository
+                        .findTopBySequence_IdOrderByTimestampDesc(liveLineHome.getId());
+                LiveLineDto liveLineHomeDto = latestSnapHome.map(Snapshot::toLiveLineDto).orElse(null);
                 homeBreakEven = calculateImpliedProbability(liveLineHomeDto.price());
-                for (LiveLine liveLineAway : liveLinesAway) {
-                    LiveLineDto liveLineAwayDto = liveLineAway.toLiveLineDto();
+                for (Sequence liveLineAway : liveLinesAway) {
+                    Optional<Snapshot> latestSnapAway = snapshotRepository
+                            .findTopBySequence_IdOrderByTimestampDesc(liveLineAway.getId());
+                    LiveLineDto liveLineAwayDto = latestSnapAway.map(Snapshot::toLiveLineDto).orElse(null);
                     awayBreakEven = calculateImpliedProbability(liveLineAwayDto.price());
                     vig = calculateVig(homeBreakEven, awayBreakEven);
                     if (vig < 0) {
                         Double wagerSplit = calculateArbWagerSplit(liveLineHomeDto.price(), liveLineAwayDto.price());
                         Double wagerSplit2 = calculateArbWagerSplit(liveLineAwayDto.price(), liveLineHomeDto.price());
-                        ArbInfoDto arb = new ArbInfoDto(event.eventId(),
-                                liveLineHomeDto.team(),
+                        ArbInfoDto arb = new ArbInfoDto(match.id(),
+                                liveLineHomeDto.side_name(),
                                 liveLineHomeDto.price(),
-                                liveLineHomeDto.bookmakerId(),
-                                liveLineHomeDto.sport(),
+                                liveLineHomeDto.bookmaker_id(),
+                                liveLineHomeDto.sport_id(),
                                 wagerSplit,
-                                liveLineAwayDto.team(),
+                                liveLineAwayDto.side_name(),
                                 liveLineAwayDto.price(),
-                                liveLineAwayDto.bookmakerId(),
+                                liveLineAwayDto.bookmaker_id(),
                                 wagerSplit2,
-                                event.startTime(),
+                                match.start_time(),
                                 vig);
-                        arbMap.put(event.eventId(), arb);
+                        arbMap.put(match.id(), arb);
                     }
 
                 }

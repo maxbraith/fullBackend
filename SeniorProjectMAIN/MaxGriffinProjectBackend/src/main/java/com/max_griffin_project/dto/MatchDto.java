@@ -12,6 +12,7 @@ public record MatchDto(
         String side_bName,
         UUID event_id,
         String eventName,
-        String sport_id) {
+        String sport_id,
+        Instant start_time) {
 }
 /* updated */

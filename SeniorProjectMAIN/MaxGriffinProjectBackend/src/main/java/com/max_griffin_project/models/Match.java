@@ -37,7 +37,7 @@ public class Match {
     private Event event;
 
     @Column(nullable = true)
-    private Instant start_date;
+    private Instant startDate;
 
     @OneToMany(mappedBy = "match", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Sequence> sequences = new ArrayList<>();
@@ -54,7 +54,8 @@ public class Match {
                 this.side_b.getName(),
                 this.event.getId(),
                 this.event.getName(),
-                this.event.getSport().getId());
+                this.event.getSport().getId(),
+                this.startDate);
     }
 
 }

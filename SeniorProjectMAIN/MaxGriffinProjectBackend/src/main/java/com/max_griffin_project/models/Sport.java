@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.UuidGenerator;
 
-import com.max_griffin_project.dto.HistoricalLineDto;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -24,9 +23,9 @@ public class Sport {
     @Column(nullable = false)
     private String name;
 
-    @OneToMany(mappedBy = "side", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "sport", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Side> sides = new ArrayList<>();
 
-    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "sport", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Event> events = new ArrayList<>();
 }

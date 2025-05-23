@@ -9,8 +9,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface MatchRepository extends JpaRepository<Match, UUID> {
-    List<Match> findByStartTimeAfter(Instant now);
+    List<Match> findByStartDateAfter(Instant now);
 
-    List<Match> findBySport_IdAndStartDateAfter(String sportId, Instant now);
+    List<Match> findByEvent_Sport_IdAndStartDateAfter(String sportId, Instant now);
 
 }

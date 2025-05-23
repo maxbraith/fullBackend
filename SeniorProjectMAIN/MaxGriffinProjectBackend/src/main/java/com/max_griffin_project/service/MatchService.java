@@ -21,18 +21,18 @@ public class MatchService {
         this.matchRepository = matchRepository;
     }
 
-    public List<MatchDto> getUpcomingEvents() {
-        List<Match> upcomingMatch = matchRepository.findByStartTimeAfter(Instant.now());
+    public List<MatchDto> getUpcomingMatches() {
+        List<Match> upcomingMatch = matchRepository.findByStartDateAfter(Instant.now());
 
         return upcomingMatch.stream()
                 .map(Match::toMatchDto)
                 .toList();
     }
 
-    public List<MatchDto> getUpcomingEventsBySport(String sport) {
-        List<Match> upcomingEvent = matchRepository.findBySport_IdAndStartDateAfter(sport, Instant.now());
+    public List<MatchDto> getUpcomingMatchesBySport(String sport) {
+        List<Match> upcomingMatch = matchRepository.findByEvent_Sport_IdAndStartDateAfter(sport, Instant.now());
 
-        return upcomingEvent.stream()
+        return upcomingMatch.stream()
                 .map(Match::toMatchDto)
                 .toList();
     }

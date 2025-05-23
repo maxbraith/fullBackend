@@ -39,8 +39,11 @@ public class Snapshot {
                 this.id,
                 this.sequence.getMatch().getId(),
                 this.sequence.getEvent().getName(),
+                this.sequence.getEvent().getSport().getId(),
+                this.sequence.getSide().getId(),
                 this.sequence.getSide().getName(),
-                this.sequence.getMarket().getName(),
+                this.sequence.getMarket().getId(),
+                this.sequence.getBookmaker().getId(),
                 this.sequence.getMarket_close(),
                 this.price,
                 this.timestamp);

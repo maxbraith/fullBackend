@@ -1,11 +1,11 @@
 spring:
   application:
-    name: project-database
+    name: Max-Griffin-Project
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/project_database
-    username: postgres
-    password: postgres_123
+    url: jdbc:postgresql://localhost:5432/max_griffin_project
+    username: local
+    password: local_user123
     driver-class-name: org.postgresql.Driver
 
   jpa:

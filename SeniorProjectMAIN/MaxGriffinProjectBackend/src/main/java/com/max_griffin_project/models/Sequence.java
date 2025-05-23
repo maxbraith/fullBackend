@@ -48,7 +48,7 @@ public class Sequence {
     private Instant market_close;
 
     @Column(name = "live_flag", nullable = true)
-    private Boolean live_flag;
+    private Boolean liveFlag;
 
     @OneToMany(mappedBy = "sequence", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Snapshot> snapshots = new ArrayList<>();

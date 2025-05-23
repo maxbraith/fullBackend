@@ -13,7 +13,8 @@ import com.max_griffin_project.service.MatchService;
 import com.max_griffin_project.service.LiveLineService;
 import com.max_griffin_project.service.MatchService;
 import com.max_griffin_project.service.UserService;
-import com.max_griffin_project.models.LiveLine;
+import com.max_griffin_project.models.Sequence;
+import com.max_griffin_project.models.Snapshot;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -32,13 +33,13 @@ import java.util.UUID;
 @RequestMapping("/v1/@me")
 public class SelfController {
     final private UserService userService;
-    final private MatchService eventService;
+    final private MatchService matchService;
     final private LiveLineService liveLineService;
 
     @Autowired
-    public SelfController(UserService userService, MatchService eventService, LiveLineService liveLineService) {
+    public SelfController(UserService userService, MatchService matchService, LiveLineService liveLineService) {
         this.userService = userService;
-        this.eventService = eventService;
+        this.matchService = matchService;
         this.liveLineService = liveLineService;
     }
 
@@ -65,80 +66,80 @@ public class SelfController {
     }
 
     @GetMapping("/upcoming-events")
-    public ResponseEntity<List<MatchDto>> upcomingEvents(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<List<MatchDto>> upcomingMatches(@AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) {
             System.err.println("Unauthorized request to /upcoming-events");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        List<MatchDto> upcomingEvents = eventService.getUpcomingEvents();
-        return ResponseEntity.ok(upcomingEvents);
+        List<MatchDto> upcomingMatches = matchService.getUpcomingMatches();
+        return ResponseEntity.ok(upcomingMatches);
     }
 
     @GetMapping("/all-livelines")
-    public ResponseEntity<Map<String, Map<String, List<LiveLineDto>>>> allLiveLines(
+    public ResponseEntity<Map<UUID, Map<String, List<LiveLineDto>>>> allLiveLines(
             @AuthenticationPrincipal UserDetails userDetails, @RequestParam(name = "sport") String sport) {
         if (userDetails == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        List<MatchDto> upcomingEvents = eventService.getUpcomingEventsBySport(sport);
-        if (upcomingEvents.contains(null) || upcomingEvents.isEmpty()) {
+        List<MatchDto> upcomingMatches = matchService.getUpcomingMatchesBySport(sport);
+        if (upcomingMatches.contains(null) || upcomingMatches.isEmpty()) {
             System.err.println("No upcoming events found");
             return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
         }
-        Map<String, Map<String, List<LiveLineDto>>> allLines = liveLineService.getAllLines(upcomingEvents);
+        Map<UUID, Map<String, List<LiveLineDto>>> allLines = liveLineService.getAllLines(upcomingMatches);
 
         return ResponseEntity.ok(allLines);
     }
 
     @GetMapping("/shop-livelines")
-    public ResponseEntity<Map<String, List<LiveLineDto>>> shopLiveLines(
+    public ResponseEntity<Map<UUID, List<LiveLineDto>>> shopLiveLines(
             @AuthenticationPrincipal UserDetails userDetails, @RequestParam(name = "sport") String sport) {
         if (userDetails == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        List<MatchDto> upcomingEvents = eventService.getUpcomingEventsBySport(sport);
-        if (upcomingEvents.contains(null) || upcomingEvents.isEmpty()) {
+        List<MatchDto> upcomingMatches = matchService.getUpcomingMatchesBySport(sport);
+        if (upcomingMatches.contains(null) || upcomingMatches.isEmpty()) {
             System.err.println("No upcoming events found");
             return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
         }
-        Map<String, List<LiveLineDto>> shoppedLines = liveLineService.shopLiveLines(upcomingEvents);
+        Map<UUID, List<LiveLineDto>> shoppedLines = liveLineService.shopLiveLines(upcomingMatches);
 
         return ResponseEntity.ok(shoppedLines);
     }
 
     @GetMapping("shop-livelines-metrics")
-    public ResponseEntity<Map<String, List<LineMetricsDto>>> shopLiveLinesMetrics(
+    public ResponseEntity<Map<UUID, List<LineMetricsDto>>> shopLiveLinesMetrics(
             @AuthenticationPrincipal UserDetails userDetails, @RequestParam(name = "sport") String sport) {
         if (userDetails == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        List<MatchDto> upcomingEvents = eventService.getUpcomingEventsBySport(sport);
-        if (upcomingEvents.contains(null) || upcomingEvents.isEmpty()) {
+        List<MatchDto> upcomingMatches = matchService.getUpcomingMatchesBySport(sport);
+        if (upcomingMatches.contains(null) || upcomingMatches.isEmpty()) {
             System.err.println("No upcoming events found");
             return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
         }
 
-        Map<String, List<LineMetricsDto>> shoppedMetrics = liveLineService.lineShopperWithMetrics(upcomingEvents);
+        Map<UUID, List<LineMetricsDto>> shoppedMetrics = liveLineService.lineShopperWithMetrics(upcomingMatches);
 
         return ResponseEntity.ok(shoppedMetrics);
     }
 
     @GetMapping("arb-livelines")
-    public ResponseEntity<Map<String, ArbInfoDto>> arbLiveLines(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<Map<UUID, ArbInfoDto>> arbLiveLines(@AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        List<MatchDto> upcomingEvents = eventService.getUpcomingEvents();
-        if (upcomingEvents.contains(null) || upcomingEvents.isEmpty()) {
+        List<MatchDto> upcomingMatches = matchService.getUpcomingMatches();
+        if (upcomingMatches.contains(null) || upcomingMatches.isEmpty()) {
             System.err.println("No upcoming events found");
             return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
         }
 
-        Map<String, ArbInfoDto> arbOpportunities = liveLineService.arbLiveLines(upcomingEvents);
+        Map<UUID, ArbInfoDto> arbOpportunities = liveLineService.arbLiveLines(upcomingMatches);
 
         return ResponseEntity.ok(arbOpportunities);
 
