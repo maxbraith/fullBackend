@@ -7,7 +7,7 @@ import org.hibernate.annotations.UuidGenerator;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
-import com.max_griffin_project.dto.EventDto;
+import com.max_griffin_project.dto.MatchDto;
 
 import java.time.Instant;
 import java.util.List;
@@ -26,10 +26,6 @@ public class Details {
     @MapsId
     @JoinColumn(name = "id")
     private Match match;
-
-    @ManyToOne
-    @JoinColumn(name = "sport_id", nullable = false)
-    private Sport sport;
 
     @OneToMany(mappedBy = "details", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Detail> attributes = new ArrayList<>();

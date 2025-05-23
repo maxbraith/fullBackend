@@ -7,7 +7,7 @@ import org.hibernate.annotations.UuidGenerator;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
-import com.max_griffin_project.dto.EventDto;
+import com.max_griffin_project.dto.MatchDto;
 
 import java.time.Instant;
 import java.util.List;

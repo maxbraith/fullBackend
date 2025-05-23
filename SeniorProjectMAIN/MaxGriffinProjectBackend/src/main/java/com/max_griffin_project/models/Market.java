@@ -13,7 +13,7 @@ import java.util.ArrayList;
 @Table(name = "market")
 public class Market {
     @Id
-    private String marketId;
+    private String id;
 
     @Column(nullable = false, unique = true)
     private String name;

@@ -7,7 +7,7 @@ import org.hibernate.annotations.UuidGenerator;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
-import com.max_griffin_project.dto.EventDto;
+import com.max_griffin_project.dto.LiveLineDto;
 
 import java.time.Instant;
 import java.util.List;
@@ -33,5 +33,17 @@ public class Snapshot {
 
     @Column(name = "timestamp", nullable = false)
     private Instant timestamp;
+
+    public LiveLineDto toLiveLineDto() {
+        return new LiveLineDto(
+                this.id,
+                this.sequence.getMatch().getId(),
+                this.sequence.getEvent().getName(),
+                this.sequence.getSide().getName(),
+                this.sequence.getMarket().getName(),
+                this.sequence.getMarket_close(),
+                this.price,
+                this.timestamp);
+    }
 
 }

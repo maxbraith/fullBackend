@@ -6,15 +6,14 @@ import com.max_griffin_project.dto.RoleDto;
 import com.max_griffin_project.dto.UserResponseDto;
 import com.max_griffin_project.dto.LineMetricsDto;
 import com.max_griffin_project.dto.ArbInfoDto;
-import com.max_griffin_project.dto.EventDto;
+import com.max_griffin_project.dto.MatchDto;
 import com.max_griffin_project.dto.LiveLineDto;
 import com.max_griffin_project.models.Event;
-import com.max_griffin_project.service.EventService;
+import com.max_griffin_project.service.MatchService;
 import com.max_griffin_project.service.LiveLineService;
-import com.max_griffin_project.service.EventService;
+import com.max_griffin_project.service.MatchService;
 import com.max_griffin_project.service.UserService;
 import com.max_griffin_project.models.LiveLine;
-
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -33,11 +32,11 @@ import java.util.UUID;
 @RequestMapping("/v1/@me")
 public class SelfController {
     final private UserService userService;
-    final private EventService eventService;
+    final private MatchService eventService;
     final private LiveLineService liveLineService;
 
     @Autowired
-    public SelfController(UserService userService, EventService eventService, LiveLineService liveLineService) {
+    public SelfController(UserService userService, MatchService eventService, LiveLineService liveLineService) {
         this.userService = userService;
         this.eventService = eventService;
         this.liveLineService = liveLineService;
@@ -66,23 +65,24 @@ public class SelfController {
     }
 
     @GetMapping("/upcoming-events")
-    public ResponseEntity<List<EventDto>> upcomingEvents(@AuthenticationPrincipal UserDetails userDetails){
-        if (userDetails == null){
+    public ResponseEntity<List<MatchDto>> upcomingEvents(@AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
             System.err.println("Unauthorized request to /upcoming-events");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        List<EventDto> upcomingEvents = eventService.getUpcomingEvents();
+        List<MatchDto> upcomingEvents = eventService.getUpcomingEvents();
         return ResponseEntity.ok(upcomingEvents);
     }
 
     @GetMapping("/all-livelines")
-    public ResponseEntity<Map<String, Map<String, List<LiveLineDto>>>> allLiveLines(@AuthenticationPrincipal UserDetails userDetails, @RequestParam(name = "sport") String sport){
+    public ResponseEntity<Map<String, Map<String, List<LiveLineDto>>>> allLiveLines(
+            @AuthenticationPrincipal UserDetails userDetails, @RequestParam(name = "sport") String sport) {
         if (userDetails == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        List<EventDto> upcomingEvents = eventService.getUpcomingEventsBySport(sport);
-        if (upcomingEvents.contains(null) || upcomingEvents.isEmpty()){
+        List<MatchDto> upcomingEvents = eventService.getUpcomingEventsBySport(sport);
+        if (upcomingEvents.contains(null) || upcomingEvents.isEmpty()) {
             System.err.println("No upcoming events found");
             return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
         }
@@ -91,15 +91,15 @@ public class SelfController {
         return ResponseEntity.ok(allLines);
     }
 
-
     @GetMapping("/shop-livelines")
-    public ResponseEntity<Map<String, List<LiveLineDto>>> shopLiveLines(@AuthenticationPrincipal UserDetails userDetails, @RequestParam(name = "sport") String sport){
+    public ResponseEntity<Map<String, List<LiveLineDto>>> shopLiveLines(
+            @AuthenticationPrincipal UserDetails userDetails, @RequestParam(name = "sport") String sport) {
         if (userDetails == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        List<EventDto> upcomingEvents = eventService.getUpcomingEventsBySport(sport);
-        if (upcomingEvents.contains(null) || upcomingEvents.isEmpty()){
+        List<MatchDto> upcomingEvents = eventService.getUpcomingEventsBySport(sport);
+        if (upcomingEvents.contains(null) || upcomingEvents.isEmpty()) {
             System.err.println("No upcoming events found");
             return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
         }
@@ -109,13 +109,14 @@ public class SelfController {
     }
 
     @GetMapping("shop-livelines-metrics")
-    public ResponseEntity<Map<String, List<LineMetricsDto>>> shopLiveLinesMetrics(@AuthenticationPrincipal UserDetails userDetails, @RequestParam(name = "sport") String sport){
+    public ResponseEntity<Map<String, List<LineMetricsDto>>> shopLiveLinesMetrics(
+            @AuthenticationPrincipal UserDetails userDetails, @RequestParam(name = "sport") String sport) {
         if (userDetails == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        List<EventDto> upcomingEvents = eventService.getUpcomingEventsBySport(sport);
-        if (upcomingEvents.contains(null) || upcomingEvents.isEmpty()){
+        List<MatchDto> upcomingEvents = eventService.getUpcomingEventsBySport(sport);
+        if (upcomingEvents.contains(null) || upcomingEvents.isEmpty()) {
             System.err.println("No upcoming events found");
             return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
         }
@@ -126,13 +127,13 @@ public class SelfController {
     }
 
     @GetMapping("arb-livelines")
-    public ResponseEntity<Map<String, ArbInfoDto>> arbLiveLines(@AuthenticationPrincipal UserDetails userDetails){
+    public ResponseEntity<Map<String, ArbInfoDto>> arbLiveLines(@AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        List<EventDto> upcomingEvents = eventService.getUpcomingEvents();
-        if (upcomingEvents.contains(null) || upcomingEvents.isEmpty()){
+        List<MatchDto> upcomingEvents = eventService.getUpcomingEvents();
+        if (upcomingEvents.contains(null) || upcomingEvents.isEmpty()) {
             System.err.println("No upcoming events found");
             return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
         }
@@ -142,12 +143,5 @@ public class SelfController {
         return ResponseEntity.ok(arbOpportunities);
 
     }
-    
-
-
-
-
-
-        
 
 }

@@ -7,7 +7,7 @@ import org.hibernate.annotations.UuidGenerator;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
-import com.max_griffin_project.dto.EventDto;
+import com.max_griffin_project.dto.MatchDto;
 
 import java.time.Instant;
 import java.util.List;
@@ -21,10 +21,6 @@ import java.util.ArrayList;
 public class Stats {
     @Id
     private UUID id;
-
-    @ManyToOne
-    @JoinColumn(name = "sport_id", nullable = false)
-    private Sport sport;
 
     @ManyToOne
     @JoinColumn(name = "match_id", nullable = false)

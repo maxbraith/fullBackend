@@ -4,12 +4,12 @@ import java.time.Instant;
 import java.util.UUID;
 
 public record LiveLineDto(
-              UUID liveLineId,
-              String eventId,
-              String marketId,
-              String bookmakerId,
-              String sport,
-              String team,
+              UUID snapshot_id,
+              UUID match_id,
+              String event_name,
+              String side_name,
+              String market_name,
+              Instant market_close,
               String price,
               Instant timestamp
 

@@ -11,6 +11,6 @@ import java.util.UUID;
 public interface SequenceRepository extends JpaRepository<Sequence, UUID> {
     List<Sequence> findByLiveFlagTrue();
 
-    List<Sequence> findBySport_IdAndMatch_IdAndEntity_IdAndLiveFlagTrue(UUID sport_id, UUID match_id, UUID entity_id);
+    List<Sequence> findByMatch_IdAndSide_IdAndLiveFlagTrue(UUID match_id, UUID entity_id);
 
 }

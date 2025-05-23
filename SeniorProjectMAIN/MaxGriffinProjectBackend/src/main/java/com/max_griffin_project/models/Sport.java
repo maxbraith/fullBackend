@@ -19,13 +19,14 @@ import java.util.UUID;
 public class Sport {
 
     @Id
-    @GeneratedValue
-    @UuidGenerator(style = UuidGenerator.Style.RANDOM)
-    private UUID _id;
+    private String id;
 
     @Column(nullable = false)
     private String name;
 
     @OneToMany(mappedBy = "side", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Side> sides = new ArrayList<>();
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Event> events = new ArrayList<>();
 }
