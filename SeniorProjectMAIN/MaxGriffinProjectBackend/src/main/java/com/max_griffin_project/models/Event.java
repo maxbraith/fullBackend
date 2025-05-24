@@ -17,7 +17,10 @@ import java.util.ArrayList;
 @Entity
 @Getter
 @Setter
-@Table(name = "event")
+@Table(
+    name = "event",
+    uniqueConstraints = @UniqueConstraint(columnNames = {"name", "start_date"})
+)
 public class Event {
     @Id
     @GeneratedValue
@@ -25,7 +28,7 @@ public class Event {
     private UUID id;
 
     @ManyToOne
-    @JoinColumn(name = "venue_id", nullable = false)
+    @JoinColumn(name = "venue_id", nullable = true)
     private Venue venue;
 
     @ManyToOne

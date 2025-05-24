@@ -44,7 +44,7 @@ public class Sequence {
     @JoinColumn(name = "bookmaker_id", nullable = false)
     private Bookmaker bookmaker;
 
-    @Column(name = "marekt_close", nullable = true)
+    @Column(name = "market_close", nullable = true)
     private Instant market_close;
 
     @Column(name = "live_flag", nullable = true)

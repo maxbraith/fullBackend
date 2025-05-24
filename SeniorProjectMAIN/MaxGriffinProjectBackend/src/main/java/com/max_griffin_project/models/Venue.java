@@ -17,14 +17,17 @@ import java.util.ArrayList;
 @Table(name = "venue")
 public class Venue {
     @Id
-    @GeneratedValue
-    @UuidGenerator(style = UuidGenerator.Style.RANDOM)
-    private UUID id;
+    private String id;
 
     @Column(nullable = false, unique = true)
     private String name;
 
     @OneToMany(mappedBy = "venue", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Event> events = new ArrayList<>();
+
+    @ElementCollection
+    @CollectionTable(name = "venue_aliases", joinColumns = @JoinColumn(name = "side_id"))
+    @Column(name = "alias")
+    private List<String> aliases = new ArrayList<>();
 
 }
