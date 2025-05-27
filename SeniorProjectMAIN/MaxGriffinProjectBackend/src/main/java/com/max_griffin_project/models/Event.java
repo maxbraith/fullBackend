@@ -17,10 +17,7 @@ import java.util.ArrayList;
 @Entity
 @Getter
 @Setter
-@Table(
-    name = "event",
-    uniqueConstraints = @UniqueConstraint(columnNames = {"name", "start_date"})
-)
+@Table(name = "event", uniqueConstraints = @UniqueConstraint(columnNames = { "name", "start_date" }))
 public class Event {
     @Id
     @GeneratedValue
@@ -42,7 +39,7 @@ public class Event {
     private Instant start_date;
 
     @Column(nullable = true)
-    private Instant end_date;
+    private String location;
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Sequence> sequences = new ArrayList<>();
